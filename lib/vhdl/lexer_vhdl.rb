@@ -1,60 +1,62 @@
 #! /usr/env/bin ruby
 
-Token=Struct.new(:kind,:val)
+Token=Struct.new(:kind,:val,:line)
 
 module VHDL
     class Lexer
         def tokenize str
             tokens=[]
             while str.size > 0
+                line_num = 1
                 case str
                     when /\A\n/
-                        tokens << Token.new(:new_line, $&)
+                        tokens << Token.new(:new_line, $&, num_line)
+                        line_num += 1
                     when /\A\s/
                     when /\Aentity/
-                        tokens << Token.new(:entity, $&)
+                        tokens << Token.new(:entity, $&, num_line)
                     when /\Ais/
-                        tokens << Token.new(:is, $&)
+                        tokens << Token.new(:is, $&, num_line)
                     when /\Aend/ 
-                        tokens << Token.new(:end, $&)
+                        tokens << Token.new(:end, $&, num_line)
                     when /\A;/
-                        tokens << Token.new(:semicol, $&)
+                        tokens << Token.new(:semicol, $&, num_line)
                     when /\Aarchitecture/
-                        tokens << Token.new(:architecture, $&)
+                        tokens << Token.new(:architecture, $&, num_line)
                     when /\Aof/
-                        tokens << Token.new(:of, $&)
+                        tokens << Token.new(:of, $&, num_line)
                     when /\Abegin/
-                        tokens << Token.new(:begin, $&)
+                        tokens << Token.new(:begin, $&, num_line)
                     when /\Aport map/
-                        tokens << Token.new(:port_map, $&)
+                        tokens << Token.new(:port_map, $&, num_line)
                     when /\Aport/
-                        tokens << Token.new(:port, $&)
+                        tokens << Token.new(:port, $&, num_line)
                     when /\A\(/
-                        tokens << Token.new(:o_parent, $&)
+                        tokens << Token.new(:o_parent, $&, num_line)
                     when /\A\)/
-                        tokens << Token.new(:c_parent, $&)
+                        tokens << Token.new(:c_parent, $&, num_line)
                     when /\A\:/
-                        tokens << Token.new(:colon, $&)
+                        tokens << Token.new(:colon, $&, num_line)
                     when /\Ain/
-                        tokens << Token.new(:in, $&)
+                        tokens << Token.new(:in, $&, num_line)
                     when /\Aout/
-                        tokens << Token.new(:out, $&)
+                        tokens << Token.new(:out, $&, num_line)
                     when /\Abit/ 
-                        tokens << Token.new(:type, $&)
+                        tokens << Token.new(:type, $&, num_line)
                     when /\A<=/
-                        tokens << Token.new(:assign_sig, $&)
+                        tokens << Token.new(:assign_sig, $&, num_line)
                     when /\A\:/
-                        tokens << Token.new(:colon, $&)
+                        tokens << Token.new(:colon, $&, num_line)
                     when /\A\./
-                        tokens << Token.new(:namespace_sep, $&)
+                        tokens << Token.new(:namespace_sep, $&, num_line)
                     when /\Ageneric map/
-                        tokens << Token.new(:gen_map, $&)
+                        tokens << Token.new(:gen_map, $&, num_line)
                     when /\A=>/
-                        tokens << Token.new(:assign, $&)
+                        tokens << Token.new(:assign, $&, num_line)
                     when /\A\,/
-                        tokens << Token.new(:coma, $&)
+                        tokens << Token.new(:coma, $&, num_line)
                     when /\A[a-zA-Z]+(\w)*\b/ # Placed at the end of the case statement because other "kinds" could satisfy the regexp
-                        tokens << Token.new(:ident, $&)
+                        tokens << Token.new(:ident, $&, num_line)
                     else
                         raise "Encountered unknown expression : #{str[0..-1]}"
                 end
