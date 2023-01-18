@@ -42,16 +42,20 @@ module VHDL
             end
         end
 
-        Root            =   Struct.new(*:entity, *:architectures)
-        Entity          =   Struct.new(:name, *:ports, *:architectures)
-        Port            =   Struct.new(:name, :port_type, :data_type, :value)
-        Architecture    =   Struct.new(:name, :entity, :body)
-
-        PortMap         =   Struct.new(*:assign_commands)
-
-        Ident           =   Struct.new(:token) # TODO : Ajouter des méthodes pour accéder à certaines informations du token plus rapidement, ou transformer ses informations.
-        AssignCommand   =   Struct.new(:dest, :source)
-        InstantiateCommand = Struct.new(:name, :entity, :arch, :lib, :port_map)
+        Root                    =   Struct.new(*:entity, *:architectures)
+        Entity                  =   Struct.new(:name, *:ports, *:architectures)
+        Port                    =   Struct.new(:name, :port_type, :data_type, :value)
+        Architecture            =   Struct.new(:name, :entity, :body)
+        PortMap                 =   Struct.new(*:association_statements)
+        
+        Ident                   =   Struct.new(:token) do # TODO : Ajouter des méthodes pour accéder à certaines informations du token plus rapidement, ou transformer ses informations.
+            def name 
+                self.token.name
+            end
+        end
+        AssociationStatement    =   Struct.new(:dest, :source)
+        AssignStatement         =   Struct.new(:dest, :source)
+        InstantiateStatement    = Struct.new(:name, :entity, :arch, :lib, :port_map)
         # Add behavioral expressions classes necessary to parse the architecture body
     end
 end

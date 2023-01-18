@@ -52,7 +52,7 @@ module VHDL
                     when /\Ageneric map/
                         tokens << Token.new(:gen_map, $&, num_line)
                     when /\A=>/
-                        tokens << Token.new(:assign, $&, num_line)
+                        tokens << Token.new(:arrow, $&, num_line)
                     when /\A\,/
                         tokens << Token.new(:coma, $&, num_line)
                     when /\A[a-zA-Z]+(\w)*\b/ # Placed at the end of the case statement because other "kinds" could satisfy the regexp

@@ -64,18 +64,22 @@ module VHDL
             }
         end
 
-        def visitInstantiateCommand exp
+        # TODO : Reprendre car pas bon dans la structure (remplacement d'un token par un nom avant de le remplacer par une entité...)
+        def visitInstantiateStatement exp
             exp.name = exp.name.val
             if exp.lib.val == "work"
                 exp.entity = @actual_lib.entities[exp.entity.val]
                 exp.arch = exp.entity.architectures.select{ |arch|
                     arch.name == exp.arch.val
-                }
+                } 
                 if exp.arch == []
                     raise "Error : Architecture not found for instanciation of #{exp.name}."
                 elsif exp.arch.length > 1 
                     raise "Error : Multiple architectures found in entity #{exp.entity.name} for instanciation of #{exp.name}."
+                else 
+                    exp.arch = exp.arch[0] # On évite ici d'avoir un tableau à traiter par la suite.
                 end
+
             else
                 raise "Error : Only \"work\" library allowed in the current version. See #{exp.name} instance declaration of entity #{exp.entity}."
             end
@@ -84,32 +88,45 @@ module VHDL
         end
 
         def visitPortMap exp, ent
-            exp.assign_commands.each{|command| 
+            exp.association_statements.each{|statement| 
                 # Decorate the AST replacing names by references to objects from work lib
-                command.dest = id_tab[command.dest.val]
-                command.source = ent.ports.select{|p| p.name == command.source.val}[0] 
+                statement.dest = id_tab[statement.dest.val]
+                statement.source = ent.ports.select{|p| p.name == statement.source.val}[0] 
                 # Test data and port type validity for port_map expression.
-                testTypeValidity command, :port_map
+                testTypeValidity statement
             }
         end
 
         def visitExp exp
             case exp
-            when VHDL::AST::AssignCommand
+            when VHDL::AST::AssociationCommand # En théorie ne se retrouve jamais ici, ce n'est pas un Statement du même niveau, il intervient aussi dans les switch case certainement traité dans une autre méthode du Visiteur à ce moment.
+                visitAssociateStatement exp
+                #testTypeValidity exp
+            when VHDL::AST::AssignStatement
                 # Contextual verification
-                testTypeValidity exp, :assign_sig # Also replaces name by references link between objects
-            when VHDL::AST::InstantiateCommand
-                visitInstantiateCommand exp
-            when VHDL::AST::PortMap
-                exp.assign_commands.each{|c| testTypeValidity c, :port_map} 
+                visitAssignStatement exp
+                #testTypeValidity exp # Also replaces name by references link between objects
+            when VHDL::AST::InstantiateStatement
+                visitInstantiateStatement exp
+            # when VHDL::AST::PortMap # En théorie pas nécessaire ici car toujours précédé d'une InstantiateStatement (pas au même niveau dans l'AST que les autres commandes)
+            #     visitPortMap exp 
+                # exp.association_statements.each{|c| testTypeValidity c}
             else
                 raise "Error : unknown expression in architecture body"
             end
         end
 
-        def testTypeValidity exp, exp_type
+        def visitAssignStatement exp
+            testTypeValidity exp
+        end
+
+        def visitAssociateStatement exp
+            testTypeValidity exp
+        end
+
+        def testTypeValidity exp
             case exp_type # Different conditions for a valid expression, also different form to test (match it up in the future)
-            when :port_map  
+            when VHDL::AST::AssociationCommand  
                 if exp.dest.data_type == exp.source.data_type
                     if exp.dest.port_type == exp.source.port_type
                         return true
@@ -119,7 +136,7 @@ module VHDL
                 else 
                     raise "Error : ports #{exp.dest.name} and #{exp.source.name} don't ave the same data_type and can't be wired together."
                 end
-            when :assign_sig
+            when VHDL::AST::AssignStatement
                 if id_tab[exp.dest.val].data_type == id_tab[exp.source.val].data_type
                     if id_tab[exp.dest.val].port_type != id_tab[exp.source.val].port_type
                         # AST decoration

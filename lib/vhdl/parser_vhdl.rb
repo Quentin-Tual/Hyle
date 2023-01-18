@@ -3,10 +3,9 @@
 require_relative 'lexer_vhdl.rb'
 require_relative 'ast_vhdl.rb'
 
-# TODO : Ajouter la prise en charge de l'instanciation de composants et donc par nécessité la prise en charge du dev modulaire (plusieurs fichiers, plusieurs entités, etc). Enregistrement de l'AST de tous les fichiers scannés dans un .work pour permettre la récupération et l'exploitation de ce dernier pour l'instanciation des composants.     
+# TODO : Ajouter une couche de la classe Ident dans l'AST. Finir l'intégration en adaptant le code aux objets Ident déjà instanciés. Ajouter des méthodes en fonction des besoin dans la classe Ident.
 
-# TODO : Vérifier les doublons d'instances pour certains objets (arch, ent, etc). Voir avec JC si on ne sait pas comment s'y prendre.
-
+# TODO : Faire un deparser permettant de générer du VHDl à partir d'un AST, cela permet de vérifier les éventuels doublons d'objets dans un AST.
 
 module VHDL
     
@@ -17,7 +16,7 @@ module VHDL
             # pp @tokens # Uncomment for debug
             puts "OK"
             print "Parsing.................."
-            @ast = AST::Root.new(parse_entity, parse_architecture)
+            @ast = AST::Root.new(parse_entity, parse_architectures)
             puts "OK"
             puts "Parsing succesfully terminated !"
             @ast
@@ -25,7 +24,7 @@ module VHDL
 
         def parse_entity
             expect :entity
-            ret = AST::Entity.new(expect(:ident).val, parse_ports)
+            ret = AST::Entity.new(AST::Ident.new(expect(:ident)), parse_ports)
             expect :semicol
             expect :end
             expect :ident
@@ -41,9 +40,9 @@ module VHDL
                 expect :o_parent
                 ports = []
                 while show_next.kind != :semicol # Boucle jusqu'à la fin de la déclaration des ports
-                    name = expect(:ident).val
+                    name = AST::Ident.new(expect(:ident))
                     expect :colon
-                    port_type = expect(:in, :out).val
+                    port_type = expect(:in, :out).val # TODO : On pourrait ici aussi créer une classe de plus en terme de couche (comme Ident)
                     data_type = expect(:type).val
                     expect :semicol, :c_parent # 2 possibilités au même instant, ne créant pas de nouvelle branche dans l'arbre de décision (fin de branchement/chemin parallèle)
                     ports.append(AST::Port.new(name, port_type, data_type))
@@ -52,26 +51,11 @@ module VHDL
             end
         end
 
-        def parse_architecture
+        def parse_architectures
             archs = []
             while show_next != nil
                 if show_next.kind == :architecture
-                    expect :architecture
-                    name = expect(:ident).val
-                    expect :of
-                    ent = expect(:ident).val
-                    expect :is
-                    expect :begin
-                    del_next_new_line
-                    body = []
-                    while show_next.kind != :end
-                        body << parse_arch_body
-                    end 
-                    expect :end
-                    expect :architecture
-                    expect :semicol
-                    del_next_new_line
-                    archs << AST::Architecture.new(name, ent, body)
+                    archs << parse_arch_body
                 else 
                     break
                 end
@@ -79,17 +63,41 @@ module VHDL
             return archs
         end
 
-        def parse_arch_body
+        def parse_arch_body archs
+            expect :architecture
+            name = AST::Ident.new(expect(:ident))
+            expect :of
+            ent = AST::Ident.new(expect(:ident))
+            expect :is
+            parse_arch_declarations
+            expect :begin
+            del_next_new_line
+            statements = []
+            while show_next.kind != :end
+                statements << parse_arch_statements
+            end 
+            expect :end
+            expect :architecture
+            expect :semicol
+            del_next_new_line
+            return AST::Architecture.new(name, ent, statements)
+        end
+
+        def parse_arch_declarations # Still WIP
+
+        end
+
+        def parse_arch_statements
             next_line = show_next_line
             next_line_kinds = next_line.collect {|x| x.kind}
             case next_line_kinds
                 # Component instanciation
                 in [:ident, :colon, :entity, *] 
-                    name = next_line[0]
+                    name = AST::Ident.new(next_line[0])
                      # Gives the name of the Instantiated object
-                    lib = next_line[3] # Gives the lib in which entity is declared
-                    ent = next_line[5] # Gives the name of entity Instantiated
-                    arch = next_line[7] # Gives the architectures name to use (if multiples declared in lib)
+                    lib = AST::Ident.new(next_line[3]) # Gives the lib in which entity is declared
+                    ent = AST::Ident.new(next_line[5]) # Gives the name of entity Instantiated
+                    arch = AST::Ident.new(next_line[7]) # Gives the architectures name to use (if multiples declared in lib)
                     if show_next.kind == :gen_map
                         puts "WIP"
                     end
@@ -99,10 +107,10 @@ module VHDL
                     expect :o_parent
                     # Loop until :c_parent instead of :coma
                     while show_next.kind != :semicol
-                        a = expect :ident # Create an AssignCommand class object with these information
-                        expect :assign
-                        b = expect :ident
-                        port_map.assign_commands << AST::AssignCommand.new(a, b)
+                        a = AST::Ident.new(expect :ident) # Create an AssignCommand class object with these information
+                        expect :arrow
+                        b = AST::Ident.new(expect :ident)
+                        port_map.assign_commands << AST::AssociationCommand.new(a, b)
                         expect :coma, :c_parent
                     end
                     expect :semicol
