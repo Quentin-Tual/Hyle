@@ -55,7 +55,7 @@ module VHDL
             archs = []
             while show_next != nil
                 if show_next.kind == :architecture
-                    archs << parse_arch_body
+                    archs << parse_arch_body 
                 else 
                     break
                 end
@@ -63,7 +63,7 @@ module VHDL
             return archs
         end
 
-        def parse_arch_body archs
+        def parse_arch_body
             expect :architecture
             name = AST::Ident.new(expect(:ident))
             expect :of
@@ -107,18 +107,18 @@ module VHDL
                     expect :o_parent
                     # Loop until :c_parent instead of :coma
                     while show_next.kind != :semicol
-                        a = AST::Ident.new(expect :ident) # Create an AssignCommand class object with these information
+                        a = AST::Ident.new(expect :ident) # Create an AssignStatement class object with these information
                         expect :arrow
                         b = AST::Ident.new(expect :ident)
                         port_map.assign_commands << AST::AssociationCommand.new(a, b)
                         expect :coma, :c_parent
                     end
                     expect :semicol
-                    ret = AST::InstantiateCommand.new(name, ent, arch, lib, port_map)
+                    ret = AST::InstantiateStatement.new(name, ent, arch, lib, port_map)
                 # Signal/Port assignement 
                 in [:ident, :assign_sig, :ident, :semicol]
                     # Only create an object, visitor object in charge of contextual analysis will then replace the names by actual instantiated Port objects.
-                    ret = AST::AssignCommand.new(next_line[0], next_line[2])
+                    ret = VHDL::AST::AssignStatement.new(next_line[0], next_line[2])
             else
                 raise "ERROR : Expecting architecture body expression. Received unknown expression."
             end 

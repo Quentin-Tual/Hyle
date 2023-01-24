@@ -99,7 +99,7 @@ module VHDL
 
         def visitExp exp
             case exp
-            when VHDL::AST::AssociationCommand # En théorie ne se retrouve jamais ici, ce n'est pas un Statement du même niveau, il intervient aussi dans les switch case certainement traité dans une autre méthode du Visiteur à ce moment.
+            when VHDL::AST::AssociationStatement # En théorie ne se retrouve jamais ici, ce n'est pas un Statement du même niveau, il intervient aussi dans les switch case certainement traité dans une autre méthode du Visiteur à ce moment.
                 visitAssociateStatement exp
                 #testTypeValidity exp
             when VHDL::AST::AssignStatement
@@ -125,8 +125,8 @@ module VHDL
         end
 
         def testTypeValidity exp
-            case exp_type # Different conditions for a valid expression, also different form to test (match it up in the future)
-            when VHDL::AST::AssociationCommand  
+            case exp # Different conditions for a valid expression, also different form to test (match it up in the future)
+            when VHDL::AST::AssociationStatement  
                 if exp.dest.data_type == exp.source.data_type
                     if exp.dest.port_type == exp.source.port_type
                         return true
@@ -137,7 +137,7 @@ module VHDL
                     raise "Error : ports #{exp.dest.name} and #{exp.source.name} don't ave the same data_type and can't be wired together."
                 end
             when VHDL::AST::AssignStatement
-                if id_tab[exp.dest.val].data_type == id_tab[exp.source.val].data_type
+                if id_tab[exp.dest].data_type == id_tab[exp.source].data_type
                     if id_tab[exp.dest.val].port_type != id_tab[exp.source.val].port_type
                         # AST decoration
                         exp.dest = id_tab[exp.dest.val] 

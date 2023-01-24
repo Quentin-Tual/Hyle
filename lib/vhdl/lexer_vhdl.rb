@@ -7,11 +7,11 @@ module VHDL
         def tokenize str
             tokens=[]
             while str.size > 0
-                line_num = 1
+                num_line = 1
                 case str
                     when /\A\n/
                         tokens << Token.new(:new_line, $&, num_line)
-                        line_num += 1
+                        num_line += 1
                     when /\A\s/
                     when /\Aentity/
                         tokens << Token.new(:entity, $&, num_line)

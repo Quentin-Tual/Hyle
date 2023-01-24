@@ -2,7 +2,7 @@ require_relative "../lib/vhdl.rb"
 
 # TODO : Voir pour faire des tests avec Rspec
 
-txt=IO.read("test.vhd")
+txt=IO.read("tests/test.vhd")
 ast = VHDL::Parser.new.parse txt
 decorated_ast = VHDL::Visitor.new.visitAST ast
 # pp decorated_ast

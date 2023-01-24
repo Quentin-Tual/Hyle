@@ -2,7 +2,7 @@
 
 module VHDL
     module AST
-
+        $DEF_LIB = ".work"
         class Work 
             # Current library, known entities are stored in it in the form of decorated ASTs.
             # "entities" attribute is Hash type variable containing known entities associated with their name as the hash key.
@@ -16,15 +16,19 @@ module VHDL
             end
         
             def export
-                f = File.new(".work", "w")
+                f = File.new($DEF_LIB, "w")
                 f.puts(Marshal.dump(self))
                 f.close
             end
 
             def import
-                f = File.new(".work", "r")
-                self.entities = Marshal.load(f).entities
-                f.close
+                if File.exists?($DEF_LIB)
+                    f = File.new($DEF_LIB, "r")
+                    self.entities = Marshal.load(f).entities
+                    f.close
+                else 
+                    puts "Warning : no library found, a .work will be created."
+                end
             end
 
             def add ent
