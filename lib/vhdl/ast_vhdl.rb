@@ -11,7 +11,7 @@ module VHDL
             def initialize *ent
                 @entities = {}
                 if ent != []
-                    ent.each{|e| @entities[e.name] = e}
+                    ent.each{|e| @entities[e.name.name] = e}
                 end
             end
         
@@ -32,7 +32,7 @@ module VHDL
             end
 
             def add ent
-                @entities[ent.name] = ent
+                @entities[ent.name.name] = ent
             end
 
             def delete ent
@@ -54,7 +54,7 @@ module VHDL
         
         Ident                   =   Struct.new(:token) do # TODO : Ajouter des méthodes pour accéder à certaines informations du token plus rapidement, ou transformer ses informations.
             def name 
-                self.token.name
+                self.token.val
             end
         end
         AssociationStatement    =   Struct.new(:dest, :source)

@@ -110,7 +110,7 @@ module VHDL
                         a = AST::Ident.new(expect :ident) # Create an AssignStatement class object with these information
                         expect :arrow
                         b = AST::Ident.new(expect :ident)
-                        port_map.assign_commands << AST::AssociationCommand.new(a, b)
+                        port_map.association_statements << AST::AssociationStatement.new(a, b)
                         expect :coma, :c_parent
                     end
                     expect :semicol
@@ -118,7 +118,7 @@ module VHDL
                 # Signal/Port assignement 
                 in [:ident, :assign_sig, :ident, :semicol]
                     # Only create an object, visitor object in charge of contextual analysis will then replace the names by actual instantiated Port objects.
-                    ret = VHDL::AST::AssignStatement.new(next_line[0], next_line[2])
+                    ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), AST::Ident.new(next_line[2]))
             else
                 raise "ERROR : Expecting architecture body expression. Received unknown expression."
             end 

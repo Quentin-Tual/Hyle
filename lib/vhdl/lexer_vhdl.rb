@@ -6,8 +6,8 @@ module VHDL
     class Lexer
         def tokenize str
             tokens=[]
+            num_line = 1
             while str.size > 0
-                num_line = 1
                 case str
                     when /\A\n/
                         tokens << Token.new(:new_line, $&, num_line)

@@ -30,8 +30,8 @@ module VHDL
         end
         
         def visitEntity subAst
-            @ent_name = subAst.name
-            @id_tab[subAst.name] = subAst
+            @ent_name = subAst.name.name
+            @id_tab[subAst.name.name] = subAst
             visitPorts subAst.ports 
         end
 
@@ -40,11 +40,11 @@ module VHDL
         end
         
         def visitPort subAst
-            @id_tab[subAst.name] = subAst
+            @id_tab[subAst.name.name] = subAst
         end
 
         def visitArch subAst
-            subAst.entity = @id_tab[subAst.entity]
+            subAst.entity = @id_tab[subAst.entity.name]
             if subAst.entity.architectures == nil
                 subAst.entity.architectures = [subAst]
             else    
@@ -66,11 +66,11 @@ module VHDL
 
         # TODO : Reprendre car pas bon dans la structure (remplacement d'un token par un nom avant de le remplacer par une entité...)
         def visitInstantiateStatement exp
-            exp.name = exp.name.val
-            if exp.lib.val == "work"
-                exp.entity = @actual_lib.entities[exp.entity.val]
+            exp.name = exp.name.name
+            if exp.lib.name == "work"
+                exp.entity = @actual_lib.entities[exp.entity.name]
                 exp.arch = exp.entity.architectures.select{ |arch|
-                    arch.name == exp.arch.val
+                    arch.name.name == exp.arch.name
                 } 
                 if exp.arch == []
                     raise "Error : Architecture not found for instanciation of #{exp.name}."
@@ -90,8 +90,8 @@ module VHDL
         def visitPortMap exp, ent
             exp.association_statements.each{|statement| 
                 # Decorate the AST replacing names by references to objects from work lib
-                statement.dest = id_tab[statement.dest.val]
-                statement.source = ent.ports.select{|p| p.name == statement.source.val}[0] 
+                statement.dest = id_tab[statement.dest.name]
+                statement.source = ent.ports.select{|p| p.name.name == statement.source.name}[0] 
                 # Test data and port type validity for port_map expression.
                 testTypeValidity statement
             }
@@ -137,11 +137,11 @@ module VHDL
                     raise "Error : ports #{exp.dest.name} and #{exp.source.name} don't ave the same data_type and can't be wired together."
                 end
             when VHDL::AST::AssignStatement
-                if id_tab[exp.dest].data_type == id_tab[exp.source].data_type
-                    if id_tab[exp.dest.val].port_type != id_tab[exp.source.val].port_type
+                if id_tab[exp.dest.name].data_type == id_tab[exp.source.name].data_type
+                    if id_tab[exp.dest.name].port_type != id_tab[exp.source.name].port_type
                         # AST decoration
-                        exp.dest = id_tab[exp.dest.val] 
-                        exp.source = id_tab[exp.source.val]
+                        exp.dest = id_tab[exp.dest.name] 
+                        exp.source = id_tab[exp.source.name]
                         return true
                     else 
                         raise "Error : ports #{exp.dest.name} and #{exp.source.name} are from same port type and can't be wired together."

@@ -22,7 +22,7 @@ test.export
 # test2.import
 # pp test2
 
-txt=IO.read("test2.vhd")
+txt=IO.read("tests/test2.vhd")
 ast = VHDL::Parser.new.parse txt
 decorated_ast = VHDL::Visitor.new.visitAST ast
 
