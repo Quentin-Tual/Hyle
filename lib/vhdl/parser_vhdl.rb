@@ -1,7 +1,6 @@
 #! /usr/env/bin ruby    
 
 require_relative 'lexer_vhdl.rb'
-require_relative 'ast_vhdl.rb'
 
 # TODO : Ajouter une couche de la classe Ident dans l'AST. Finir l'intégration en adaptant le code aux objets Ident déjà instanciés. Ajouter des méthodes en fonction des besoin dans la classe Ident.
 
