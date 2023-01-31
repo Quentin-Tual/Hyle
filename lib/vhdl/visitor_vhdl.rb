@@ -6,7 +6,7 @@ module VHDL
 
     class Visitor 
         # Visitor's goal is to decorate the given AST and detect any contextual error, including type errors.
-        attr_accessor :id_tab, :ent_name
+        attr_accessor :id_tab, :ent_name, :actual_lib
 
         def initialize
             @id_tab = Hash.new
@@ -44,6 +44,7 @@ module VHDL
         end
 
         def visitArch subAst
+            
             subAst.entity = @id_tab[subAst.entity.name]
             if subAst.entity.architectures == nil
                 subAst.entity.architectures = [subAst]
@@ -69,6 +70,7 @@ module VHDL
             exp.name = exp.name.name
             if exp.lib.name == "work"
                 exp.entity = @actual_lib.entities[exp.entity.name]
+                pp exp.entity
                 exp.arch = exp.entity.architectures.select{ |arch|
                     arch.name.name == exp.arch.name
                 } 

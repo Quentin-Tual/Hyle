@@ -9,9 +9,15 @@ require_relative 'lexer_vhdl.rb'
 module VHDL
     
     class Parser
+
+        def initialize
+            @tokens = nil
+            @ast = nil
+        end
+
         def parse str
             print "Lexical verification......."
-            @tokens=Lexer.new.tokenize(str) 
+            @tokens = Lexer.new.tokenize(str) 
             # pp @tokens # Uncomment for debug
             puts "OK"
             print "Parsing.................."
