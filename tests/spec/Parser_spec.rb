@@ -4,7 +4,7 @@ RSpec.describe VHDL::Parser do
 
     before(:each) do
         @str = IO.read("test2.vhd")
-                @ast = VHDL::Parser.new.parse @str
+        @ast = VHDL::Parser.new.parse @str
 
     end
 

@@ -16,14 +16,14 @@ module VHDL
         end
 
         def parse str
-            print "Lexical verification......."
+            #print "Lexical verification......."
             @tokens = Lexer.new.tokenize(str) 
             # pp @tokens # Uncomment for debug
-            puts "OK"
-            print "Parsing.................."
+            #puts "OK"
+            #print "Parsing...................."
             @ast = AST::Root.new(parse_entity, parse_architectures)
-            puts "OK"
-            puts "Parsing succesfully terminated !"
+            #puts "OK"
+            #puts "Parsing succesfully terminated !"
             @ast
         end
 
@@ -47,7 +47,8 @@ module VHDL
                 while show_next.kind != :semicol # Boucle jusqu'à la fin de la déclaration des ports
                     name = AST::Ident.new(expect(:ident))
                     expect :colon
-                    port_type = expect(:in, :out).val # TODO : On pourrait ici aussi créer une classe de plus en terme de couche (comme Ident)
+                    # TODO : On pourrait ici aussi créer une classe de plus en terme de couche (comme Ident). Un type nommé "type" sous la forme d'une énumération pouvant prendre un nombre prédéterminé de valeurs différentes.
+                    port_type = expect(:in, :out).val 
                     data_type = expect(:type).val
                     expect :semicol, :c_parent # 2 possibilités au même instant, ne créant pas de nouvelle branche dans l'arbre de décision (fin de branchement/chemin parallèle)
                     ports.append(AST::Port.new(name, port_type, data_type))

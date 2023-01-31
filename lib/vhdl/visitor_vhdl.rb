@@ -14,7 +14,7 @@ module VHDL
         end
 
         def visitAST ast
-            print "Contextual analysis........"
+            #print "Contextual analysis........"
 
             @actual_lib.import
             
@@ -24,8 +24,8 @@ module VHDL
             @actual_lib.add ast.entity
             @actual_lib.export
 
-            puts "OK"
-            puts "Contextual analysis succesfully terminated !"
+            #puts "OK"
+            #puts "Contextual analysis succesfully terminated !"
             return ast
         end
         
@@ -67,10 +67,8 @@ module VHDL
 
         # TODO : Reprendre car pas bon dans la structure (remplacement d'un token par un nom avant de le remplacer par une entité...)
         def visitInstantiateStatement exp
-            exp.name = exp.name.name
             if exp.lib.name == "work"
                 exp.entity = @actual_lib.entities[exp.entity.name]
-                pp exp.entity
                 exp.arch = exp.entity.architectures.select{ |arch|
                     arch.name.name == exp.arch.name
                 } 
