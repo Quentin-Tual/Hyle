@@ -15,9 +15,9 @@ module VHDL
             @ast = nil
         end
 
-        def parse str
+        def parse tokens
             #print "Lexical verification......."
-            @tokens = Lexer.new.tokenize(str) 
+            @tokens = tokens
             # pp @tokens # Uncomment for debug
             #puts "OK"
             #print "Parsing...................."

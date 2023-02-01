@@ -47,7 +47,7 @@ module VHDL
                     f.close
                     return self.entities
                 else 
-                    puts "Warning : no library found, a .work will be created."
+                    puts "Warning : no default library found, a .work will be created."
                 end
             end
 
