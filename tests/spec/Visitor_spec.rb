@@ -14,9 +14,10 @@ RSpec.describe VHDL::Visitor do
         before(:each) do
             # str = IO.read("test.vhd")
             # VHDL::Parser.new.parse str
-            @str = IO.read("test.vhd")
-            @ast = VHDL::Parser.new.parse @str
-            @decorated_ast = subject.visitAST @ast
+            str = IO.read("test.vhd")
+            tokens = VHDL::Lexer.new.tokenize str
+            ast = VHDL::Parser.new.parse tokens
+            @decorated_ast = subject.visitAST ast
         end
 
         it 'creates a Visitor object' do 
@@ -70,9 +71,10 @@ RSpec.describe VHDL::Visitor do
         before(:each) do
             # str = IO.read("test.vhd")
             # VHDL::Parser.new.parse str
-            @str = IO.read("test2.vhd")
-            @ast = VHDL::Parser.new.parse @str
-            @decorated_ast = subject.visitAST @ast
+            str = IO.read("test2.vhd")
+            tokens = VHDL::Lexer.new.tokenize str
+            ast = VHDL::Parser.new.parse tokens
+            @decorated_ast = subject.visitAST ast
         end
 
         it 'creates a Visitor object' do 

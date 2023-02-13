@@ -4,7 +4,8 @@ RSpec.describe VHDL::Parser do
 
     before(:each) do
         @str = IO.read("test2.vhd")
-        @ast = VHDL::Parser.new.parse @str
+        tokens = VHDL::Lexer.new.tokenize @str
+        @ast = VHDL::Parser.new.parse tokens
 
     end
 
