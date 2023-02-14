@@ -71,4 +71,13 @@ RSpec.describe VHDL::Parser do
             }
         } 
     end
+
+    it 'parses an arch signal declaration' do
+        str = "signal s0 : bit;\n\nbegin\n\n"
+        tmp = VHDL::Lexer.new.tokenize(str)
+        tmp = VHDL::Parser.new.parse_arch_declarations tmp
+        expect(tmp).to be_kind_of VHDL::AST::SignalDeclaration
+        expect(tmp.name).to be_kind_of VHDL::AST::Ident
+        expect(tmp.type).to be_kind_of VHDL::AST::Type
+    end
 end

@@ -65,7 +65,6 @@ module VHDL
             }
         end
 
-        # TODO : Reprendre car pas bon dans la structure (remplacement d'un token par un nom avant de le remplacer par une entité...)
         def visitInstantiateStatement exp
             if exp.lib.name == "work"
                 exp.entity = @actual_lib.entities[exp.entity.name]
@@ -75,9 +74,10 @@ module VHDL
                 if exp.arch == []
                     raise "Error : Architecture not found for instanciation of #{exp.name}."
                 elsif exp.arch.length > 1 
+                    # ! : Possible ça ? à voir mais peut-être inutile
                     raise "Error : Multiple architectures found in entity #{exp.entity.name} for instanciation of #{exp.name}."
                 else 
-                    exp.arch = exp.arch[0] # On évite ici d'avoir un tableau à traiter par la suite.
+                    exp.arch = exp.arch[0]
                 end
 
             else
@@ -98,19 +98,15 @@ module VHDL
         end
 
         def visitExp exp
+            # Contextual verification
+            #testTypeValidity exp # Also replaces name by references link between objects
             case exp
             when VHDL::AST::AssociationStatement # En théorie ne se retrouve jamais ici, ce n'est pas un Statement du même niveau, il intervient aussi dans les switch case certainement traité dans une autre méthode du Visiteur à ce moment.
                 visitAssociateStatement exp
-                #testTypeValidity exp
             when VHDL::AST::AssignStatement
-                # Contextual verification
                 visitAssignStatement exp
-                #testTypeValidity exp # Also replaces name by references link between objects
             when VHDL::AST::InstantiateStatement
                 visitInstantiateStatement exp
-            # when VHDL::AST::PortMap # En théorie pas nécessaire ici car toujours précédé d'une InstantiateStatement (pas au même niveau dans l'AST que les autres commandes)
-            #     visitPortMap exp 
-                # exp.association_statements.each{|c| testTypeValidity c}
             else
                 raise "Error : unknown expression in architecture body"
             end

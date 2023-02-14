@@ -27,7 +27,7 @@ module VHDL
         def deparse_port sub_ast
             tmp = "\tport (\n"
             sub_ast.each{ |p|
-                tmp << "\t\t#{p.name.name} : #{p.port_type} #{p.data_type};\n"
+                tmp << "\t\t#{p.name.name} : #{p.port_type} #{p.data_type.type_name};\n"
             }
             tmp.chop!.chop!
             tmp << "\n\t);\n"

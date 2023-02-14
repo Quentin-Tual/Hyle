@@ -31,6 +31,8 @@ module VHDL
                         @tokens << VHDL::AST::Token.new(:architecture, $&, num_line)
                     when /\Aof/
                         @tokens << VHDL::AST::Token.new(:of, $&, num_line)
+                    when /\Asignal /
+                        @tokens << VHDL::AST::Token.new(:signal, $&, num_line)
                     when /\Abegin/
                         @tokens << VHDL::AST::Token.new(:begin, $&, num_line)
                     when /\Aport map/

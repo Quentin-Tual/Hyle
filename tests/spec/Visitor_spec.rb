@@ -2,10 +2,6 @@ require "../lib/vhdl.rb"
 
 RSpec.describe VHDL::Visitor do
     
-    # TODO 1 - Disposer d'une lib .work de test ? A voir si utile pour tester et comparer la lib générée avec celle devant être obtenue.
-
-    # TODO 2 - S'assurer que les entités test et test2 soient dans la lib .work et vérifier qu'ici tout soit chargé correctement. 
-
     subject do 
         VHDL::Visitor.new
     end
@@ -97,7 +93,8 @@ RSpec.describe VHDL::Visitor do
                 expect(port).to be_kind_of VHDL::AST::Port
                 expect(port.name).to be_kind_of VHDL::AST::Ident
                 expect(port.port_type).to eq("in").or eq("out")
-                expect(port.data_type).to eq "bit"
+                expect(port.data_type).to be_kind_of VHDL::AST::Type
+                expect(port.data_type).to eq(VHDL::AST::Type.new("bit"))
                 expect(port.value).to eq nil
             }
         end

@@ -3,6 +3,8 @@
 module VHDL
     module AST
         $DEF_LIB = ".work"
+        $DEF_TYPES = ["bit"] # Defines the allowed types in the VHDL parsed 
+        $DEF_TYPES_SIZES = {"bit" => 1}
         
         Token = Struct.new(:kind, :val, :line)
 
@@ -12,11 +14,38 @@ module VHDL
         Architecture            =   Struct.new(:name, :entity, :body)
         PortMap                 =   Struct.new(*:association_statements)
         
-        Ident                   =   Struct.new(:token) do # TODO : Ajouter des méthodes pour accéder à certaines informations du token plus rapidement, ou transformer ses informations.
+        Ident                   =   Struct.new(:token) do 
+            # TODO : Ajouter des méthodes pour accéder à certaines informations du token plus rapidement, ou transformer ses informations.
             def name 
                 self.token.val
             end
         end
+
+        Type = Struct.new(:type_name,:size) do
+            attr_reader :type_name, :size
+            def initialize type_name
+                if $DEF_TYPES.include?(type_name) # Known type ?
+                    @type_name = type_name
+                    if $DEF_TYPES_SIZES[type_name].nil? # If the size is not dermined by the type 
+                        # TODO : Then it is a vector -> Search the size into the type_name token
+                    else # Else, size for this type is known 
+                        @size = $DEF_TYPES_SIZES[type_name]
+                    end
+                else
+                    raise "Error : Unknown type #{type_name} encountered."
+                end
+            end
+
+            def == e
+                if (self.type_name == e.type_name) and (self.size == e.size)
+                    return true
+                else 
+                    return false
+                end
+            end
+        end
+        SignalDeclaration       = Struct.new(:name, :type)
+
         AssociationStatement    =   Struct.new(:dest, :source)
         AssignStatement         =   Struct.new(:dest, :source)
         InstantiateStatement    = Struct.new(:name, :entity, :arch, :lib, :port_map)

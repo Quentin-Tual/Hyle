@@ -17,4 +17,12 @@ RSpec.describe VHDL::Lexer do
         expect(@lexer.tokenize(str)).to be_kind_of Array
         # TODO : en théorie on doit vérifier le type, la valeur et le numéro de ligne. En pratique... Un peu long pour le peu d'utilité, il faut grader les tests assez haut niveau pour s'éviter d'y perdre trop de temps. Par exemple des fonctions globales regroupant d'autres fonctions.
     end
+
+    it "tokenizes correctly a signal declaration line" do
+        str = "signal s0 : bit;\n"
+        tmp = @lexer.tokenize(str)
+        expect(tmp).to be_kind_of Array
+        tmp_kinds = tmp.collect{ |elt| elt.kind}
+        expect(tmp_kinds).to eq([:signal, :ident, :colon, :type, :semicol, :new_line])
+    end
 end

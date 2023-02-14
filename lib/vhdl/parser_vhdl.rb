@@ -2,8 +2,6 @@
 
 require_relative 'lexer_vhdl.rb'
 
-# TODO : Faire un deparser permettant de générer du VHDl à partir d'un AST, cela permet de vérifier les éventuels doublons d'objets dans un AST.
-
 module VHDL
     
     class Parser
@@ -43,13 +41,13 @@ module VHDL
                 expect :o_parent
                 ports = []
                 while show_next.kind != :semicol # Boucle jusqu'à la fin de la déclaration des ports
-                    name = AST::Ident.new(expect(:ident))
+                    name = VHDL::AST::Ident.new(expect(:ident))
                     expect :colon
                     # TODO : On pourrait ici aussi créer une classe de plus en terme de couche (comme Ident). Un type nommé "type" sous la forme d'une énumération pouvant prendre un nombre prédéterminé de valeurs différentes.
                     port_type = expect(:in, :out).val 
-                    data_type = expect(:type).val
+                    data_type = VHDL::AST::Type.new(expect(:type).val)
                     expect :semicol, :c_parent # 2 possibilités au même instant, ne créant pas de nouvelle branche dans l'arbre de décision (fin de branchement/chemin parallèle)
-                    ports.append(AST::Port.new(name, port_type, data_type))
+                    ports.append(VHDL::AST::Port.new(name, port_type, data_type))
                 end
                 return ports
             end
@@ -73,7 +71,11 @@ module VHDL
             expect :of
             ent = AST::Ident.new(expect(:ident))
             expect :is
-            parse_arch_declarations
+            arch_decl = []
+            del_next_new_line
+            until show_next.kind == :begin
+                parse_arch_declarations
+            end
             expect :begin
             del_next_new_line
             statements = []
@@ -87,8 +89,14 @@ module VHDL
             return AST::Architecture.new(name, ent, statements)
         end
 
-        def parse_arch_declarations # Still WIP
-
+        def parse_arch_declarations tmp# Still WIP
+                @tokens = tmp ### TEST
+                next_line = show_next_line
+                next_line_kinds = next_line.collect {|x| x.kind}
+                case next_line_kinds
+                    in [:signal, :ident, :colon, :type, :semicol] # Comment faire si le type est un vecteur ? Faire contenir la taille dans la chaine de caractère associée au token semble une bonne solution, reste à voir comment extraire ça avec des regex
+                        return VHDL::AST::SignalDeclaration.new(VHDL::AST::Ident.new(next_line[1]), VHDL::AST::Type.new(next_line[3].val))    
+                end
         end
 
         def parse_arch_statements
