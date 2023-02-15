@@ -38,6 +38,10 @@ RSpec.describe VHDL::Parser do
     it 'parses architectures body from VHDL source' do
         @ast.architectures.each{ |a|
             if a.name.name == 'rtl'
+                expect(a.decl).to be_kind_of Array
+                a.decl.each{ |b| 
+                    expect(b).to be_kind_of VHDL::AST::SignalDeclaration
+                }
                 expect(a.body).to be_kind_of Array
                 a.body.each{ |b| 
                     expect(b).to be_kind_of VHDL::AST::AssignStatement 
@@ -72,12 +76,29 @@ RSpec.describe VHDL::Parser do
         } 
     end
 
-    it 'parses an arch signal declaration' do
-        str = "signal s0 : bit;\n\nbegin\n\n"
-        tmp = VHDL::Lexer.new.tokenize(str)
-        tmp = VHDL::Parser.new.parse_arch_declarations tmp
-        expect(tmp).to be_kind_of VHDL::AST::SignalDeclaration
-        expect(tmp.name).to be_kind_of VHDL::AST::Ident
-        expect(tmp.type).to be_kind_of VHDL::AST::Type
-    end
+    context 'parses an arch declaration section containing' do
+        it 'a bit type signal' do
+            str = "signal s0 : bit;\n\nbegin\n\n"
+            tmp = VHDL::Lexer.new.tokenize(str)
+            tmp = VHDL::Parser.new.test_parse_arch_declarations tmp
+            expect(tmp).to be_kind_of VHDL::AST::SignalDeclaration
+            expect(tmp.name).to be_kind_of VHDL::AST::Ident
+            expect(tmp.type).to be_kind_of VHDL::AST::Type
+            expect(tmp.name.name).to eq("s0")
+            expect(tmp.type.type_name).to eq("bit")
+            expect(tmp.type.size).to eq(1)
+        end
+
+        it 'a bit_vector type signal' do 
+            str = "signal s0 : bit_vector(15 downto 0);\n\nbegin\n\n"
+            tmp = VHDL::Lexer.new.tokenize(str)
+            tmp = VHDL::Parser.new.test_parse_arch_declarations tmp
+            expect(tmp).to be_kind_of VHDL::AST::SignalDeclaration
+            expect(tmp.name).to be_kind_of VHDL::AST::Ident
+            expect(tmp.type).to be_kind_of VHDL::AST::Type
+            expect(tmp.name.name).to eq("s0")
+            expect(tmp.type.type_name).to eq("bit_vector")
+            expect(tmp.type.size).to eq(16)
+        end
+    end 
 end

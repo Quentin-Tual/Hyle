@@ -39,6 +39,14 @@ RSpec.describe VHDL::Visitor do
             @decorated_ast.architectures.each{ |arch| 
                 expect(arch.name).to be_kind_of VHDL::AST::Ident
                 expect(arch.entity).to be_kind_of VHDL::AST::Entity
+                expect(arch.decl).to be_kind_of Array
+                arch.decl.each{ |declaration|
+                    expect(declaration).to be_kind_of VHDL::AST::SignalDeclaration # ! : ou d'éventuels futurs types de déclarations possibles.
+                    expect(declaration.name).to be_kind_of VHDL::AST::Ident
+                    expect(declaration.type).to be_kind_of VHDL::AST::Type
+                    expect(declaration.type.type_name).to be_kind_of String
+                    expect(declaration.type.size).to be_kind_of Integer
+                }
                 expect(arch.body).to be_kind_of Array
                 arch.body.each{ |statement|
                     expect(statement).to be_kind_of(VHDL::AST::AssociationStatement).or be_kind_of(VHDL::AST::AssignStatement).or be_kind_of(VHDL::AST::InstantiateStatement)
@@ -60,6 +68,10 @@ RSpec.describe VHDL::Visitor do
                     end
                 }
             }
+        end
+
+        it 'Check the context in architecture declaration and add signals to id_tab attribute' do 
+
         end
     end
 
@@ -103,6 +115,14 @@ RSpec.describe VHDL::Visitor do
             @decorated_ast.architectures.each{ |arch| 
                 expect(arch.name).to be_kind_of VHDL::AST::Ident
                 expect(arch.entity).to be_kind_of VHDL::AST::Entity
+                expect(arch.decl).to be_kind_of Array
+                arch.decl.each{ |declaration|
+                    expect(declaration).to be_kind_of VHDL::AST::SignalDeclaration # ! : ou d'éventuels futurs types de déclarations possibles.
+                    expect(declaration.name).to be_kind_of VHDL::AST::Ident
+                    expect(declaration.type).to be_kind_of VHDL::AST::Type
+                    expect(declaration.type.type_name).to be_kind_of String
+                    expect(declaration.type.size).to be_kind_of Integer
+                }
                 expect(arch.body).to be_kind_of Array
                 arch.body.each{ |statement|
                     expect(statement).to be_kind_of(VHDL::AST::AssociationStatement).or be_kind_of(VHDL::AST::AssignStatement).or be_kind_of(VHDL::AST::InstantiateStatement)
@@ -126,4 +146,5 @@ RSpec.describe VHDL::Visitor do
             }
         end
     end
+    
 end

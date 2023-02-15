@@ -9,6 +9,9 @@ end test;
 
 architecture rtl of test is
 
+	signal s0 : bit;
+	signal s1 : bit_vector(15 downto 0);
+
 begin
 
 	s <= clk;
