@@ -34,5 +34,12 @@ RSpec.describe VHDL::Lexer do
             tmp_kinds = tmp.collect{ |elt| elt.kind}
             expect(tmp_kinds).to eq([:signal, :ident, :colon, :type, :semicol, :new_line])
         end
+
+        it "binary expression assign statement" do
+            str = "s0 <= clk and en;\n"
+            tmp = @lexer.tokenize(str)
+            expect(tmp).to be_kind_of Array
+            expect(tmp_kinds = tmp.collect{|e| e.kind}).to eq([:ident, :assign_sig, :ident, :operator, :ident, :semicol, :new_line])
+        end
     end
 end

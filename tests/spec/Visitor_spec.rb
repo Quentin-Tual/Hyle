@@ -43,17 +43,17 @@ RSpec.describe VHDL::Visitor do
                 arch.decl.each{ |declaration|
                     expect(declaration).to be_kind_of VHDL::AST::SignalDeclaration # ! : ou d'éventuels futurs types de déclarations possibles.
                     expect(declaration.name).to be_kind_of VHDL::AST::Ident
-                    expect(declaration.type).to be_kind_of VHDL::AST::Type
-                    expect(declaration.type.type_name).to be_kind_of String
-                    expect(declaration.type.size).to be_kind_of Integer
+                    expect(declaration.data_type).to be_kind_of VHDL::AST::Type
+                    expect(declaration.data_type.type_name).to be_kind_of String
+                    expect(declaration.data_type.size).to be_kind_of Integer
                 }
                 expect(arch.body).to be_kind_of Array
                 arch.body.each{ |statement|
                     expect(statement).to be_kind_of(VHDL::AST::AssociationStatement).or be_kind_of(VHDL::AST::AssignStatement).or be_kind_of(VHDL::AST::InstantiateStatement)
                     case statement
                     when VHDL::AST::AssignStatement
-                        expect(statement.dest).to be_kind_of VHDL::AST::Port
-                        expect(statement.source).to be_kind_of VHDL::AST::Port
+                        expect(statement.dest).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDL::AST::SignalDeclaration)
+                        expect(statement.source).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDL::AST::SignalDeclaration).or be_kind_of(VHDL::AST::BinaryExp)
                     when VHDL::AST::InstantiateStatement
                         expect(statement.name).to be_kind_of VHDL::AST::Ident
                         expect(statement.entity).to be_kind_of VHDL::AST::Entity
@@ -75,10 +75,8 @@ RSpec.describe VHDL::Visitor do
         end
     end
 
-    context 'Existing .work file' do
+    context 'Existing .work file with instanciation' do
         before(:each) do
-            # str = IO.read("test.vhd")
-            # VHDL::Parser.new.parse str
             str = IO.read("test2.vhd")
             tokens = VHDL::Lexer.new.tokenize str
             ast = VHDL::Parser.new.parse tokens
@@ -119,17 +117,22 @@ RSpec.describe VHDL::Visitor do
                 arch.decl.each{ |declaration|
                     expect(declaration).to be_kind_of VHDL::AST::SignalDeclaration # ! : ou d'éventuels futurs types de déclarations possibles.
                     expect(declaration.name).to be_kind_of VHDL::AST::Ident
-                    expect(declaration.type).to be_kind_of VHDL::AST::Type
-                    expect(declaration.type.type_name).to be_kind_of String
-                    expect(declaration.type.size).to be_kind_of Integer
+                    expect(declaration.data_type).to be_kind_of VHDL::AST::Type
+                    expect(declaration.data_type.type_name).to be_kind_of String
+                    expect(declaration.data_type.size).to be_kind_of Integer
                 }
                 expect(arch.body).to be_kind_of Array
                 arch.body.each{ |statement|
                     expect(statement).to be_kind_of(VHDL::AST::AssociationStatement).or be_kind_of(VHDL::AST::AssignStatement).or be_kind_of(VHDL::AST::InstantiateStatement)
                     case statement
                     when VHDL::AST::AssignStatement
-                        expect(statement.dest).to be_kind_of VHDL::AST::Port
-                        expect(statement.source).to be_kind_of VHDL::AST::Port
+                        expect(statement.dest).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDL::AST::SignalDeclaration)
+                        expect(statement.source).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDL::AST::SignalDeclaration).or be_kind_of(VHDL::AST::BinaryExp)
+                        if statement.source.class == VHDL::AST::BinaryExp
+                            expect(statement.source.operand1).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDl::AST::SignalDeclaration)
+                            expect(statement.source.operand2).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDl::AST::SignalDeclaration)
+                            expect(statement.source.operator).to be_kind_of(VHDL::AST::Operator)
+                        end
                     when VHDL::AST::InstantiateStatement
                         expect(statement.name).to be_kind_of VHDL::AST::Ident
                         expect(statement.entity).to be_kind_of VHDL::AST::Entity
@@ -138,7 +141,7 @@ RSpec.describe VHDL::Visitor do
                         expect(statement.port_map).to be_kind_of VHDL::AST::PortMap
                         statement.port_map.association_statements.each{ |asso_stmt| 
                             expect(asso_stmt).to be_kind_of VHDL::AST::AssociationStatement
-                            expect(asso_stmt.dest).to be_kind_of VHDL::AST::Port
+                            expect(asso_stmt.dest).to be_kind_of(VHDL::AST::Port).or be_kind_of(VHDL::AST::SignalDeclaration)
                             expect(asso_stmt.source).to be_kind_of VHDL::AST::Port 
                         }
                     end

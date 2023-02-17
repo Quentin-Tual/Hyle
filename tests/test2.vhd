@@ -15,11 +15,14 @@ architecture rtl of test2 is
 begin
 
     s <= clk;
+    s0 <= s;
 
 end architecture;
 
 architecture behavioral of test2 is
 
+    signal s0 : bit;
+    
 begin
 
     MUX : entity work.test(rtl)
@@ -27,7 +30,7 @@ begin
         clk => clk,
         en => en,
         rst => rst,
-        s => s
+        s0 => s
     );
 
 end architecture;

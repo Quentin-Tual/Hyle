@@ -9,7 +9,7 @@ module VHDL
         attr_accessor :id_tab, :ent_name, :actual_lib
 
         def initialize
-            @id_tab = Hash.new
+            @id_tab = Hash.new # Peut-être préférable d'avoir une table différentes pour chaque famille : les entités, les architectures, les ports, les signaux, voire d'autres. 
             @actual_lib = VHDL::AST::Work.new 
         end
 
@@ -44,23 +44,51 @@ module VHDL
         end
 
         def visitArch subAst
-            
             subAst.entity = @id_tab[subAst.entity.name]
             if subAst.entity.architectures == nil
                 subAst.entity.architectures = [subAst]
             else    
                 subAst.entity.architectures << subAst
             end
-            visitArchDecl subAst
-            visitArchBody subAst
+            visitArchDecl subAst.decl
+            visitArchBody subAst.body
+            clear_SignalDeclaration
+        end
+
+        def clear_SignalDeclaration # Allow to reset context between two architecture visit
+            @id_tab.each_pair{|key, value| 
+                if value.class == VHDL::AST::SignalDeclaration
+                    @id_tab.delete(key)
+                end
+            }
         end
 
         def visitArchDecl subAst
+            # pp subAst
+            subAst.each{ |line|
+                visitDecl line
+            }
+        end
 
+        def visitDecl exp
+            case exp
+            when VHDL::AST::SignalDeclaration
+                visitSignalDeclaration exp
+            else
+                raise "Internal Error : Parsing incorrect, unknown declaration sequence"
+            end
+        end
+
+        def visitSignalDeclaration exp
+            if @id_tab[exp.name.name].nil?
+                @id_tab[exp.name.name] = exp
+            else
+                raise "Error : Name already known as #{@id_tab[exp.name.name]}.\n -> #{exp.name.token.line}"
+            end
         end
 
         def visitArchBody subAst
-            subAst.body.each { |line|
+            subAst.each { |line|
                 visitExp line
             }
         end
@@ -84,25 +112,20 @@ module VHDL
                 raise "Error : Only \"work\" library allowed in the current version. See #{exp.name} instance declaration of entity #{exp.entity}."
             end
             visitPortMap exp.port_map, exp.entity
-            # TODO : Verify wiring (data and port type) and decorate the AST (replace names by direct references).
         end
 
         def visitPortMap exp, ent
             exp.association_statements.each{|statement| 
                 # Decorate the AST replacing names by references to objects from work lib
-                statement.dest = id_tab[statement.dest.name]
-                statement.source = ent.ports.select{|p| p.name.name == statement.source.name}[0] 
                 # Test data and port type validity for port_map expression.
-                testTypeValidity statement
+                visitAssociateStatement statement, ent
             }
         end
 
         def visitExp exp
             # Contextual verification
-            #testTypeValidity exp # Also replaces name by references link between objects
+            # Also replaces name by references link between objects
             case exp
-            when VHDL::AST::AssociationStatement # En théorie ne se retrouve jamais ici, ce n'est pas un Statement du même niveau, il intervient aussi dans les switch case certainement traité dans une autre méthode du Visiteur à ce moment.
-                visitAssociateStatement exp
             when VHDL::AST::AssignStatement
                 visitAssignStatement exp
             when VHDL::AST::InstantiateStatement
@@ -112,38 +135,62 @@ module VHDL
             end
         end
 
-        def visitAssignStatement exp
-            testTypeValidity exp
+        def visitBinaryExp exp, ret_type
+            exp.operand1 = @id_tab[exp.operand1.name]
+            exp.operand2 = @id_tab[exp.operand2.name]
+            exp.ret_type = ret_type # ! : En théorie un objet de classe Type mais pour l'instant on laisse comme ça
         end
 
-        def visitAssociateStatement exp
-            testTypeValidity exp
+        def visitAssignStatement statement
+
+            case statement.source
+            when VHDL::AST::Ident
+                testTypeValidity statement
+                statement.dest = @id_tab[statement.dest.name] 
+                statement.source = @id_tab[statement.source.name]
+            when VHDL::AST::BinaryExp
+                visitBinaryExp statement.source, testTypeValidity(statement)
+                statement.dest = @id_tab[statement.dest.name]
+            end
+            
+        end
+
+        def visitAssociateStatement  statement, ent
+            
+            testTypeValidity statement
+            statement.dest = @id_tab[statement.dest.name]
+            statement.source = ent.ports.select{|p| p.name.name == statement.source.name}[0] 
+
         end
 
         def testTypeValidity exp
             case exp # Different conditions for a valid expression, also different form to test (match it up in the future)
             when VHDL::AST::AssociationStatement  
-                if exp.dest.data_type == exp.source.data_type
-                    if exp.dest.port_type == exp.source.port_type
-                        return true
-                    else 
-                        raise "Error : ports #{exp.dest.name} and #{exp.source.name} are from same port type and can't be wired together."
+                if @id_tab[exp.dest.name].data_type == @id_tab[exp.source.name].data_type
+                    if (@id_tab[exp.dest.name].class == VHDL::AST::Port) and (@id_tab[exp.dest.name].port_type != @id_tab[exp.source.name].port_type)
+                            raise "Error : ports #{exp.dest.name} and #{exp.source.name} are from same port type and can't be wired together.\n -> #{exp.dest.token.line}"
                     end
                 else 
-                    raise "Error : ports #{exp.dest.name} and #{exp.source.name} don't ave the same data_type and can't be wired together."
+                    raise "Error : ports #{exp.dest.name} and #{exp.source.name} don't ave the same data_type and can't be wired together.\n -> #{exp.dest.token.line}"
                 end
             when VHDL::AST::AssignStatement
-                if id_tab[exp.dest.name].data_type == id_tab[exp.source.name].data_type
-                    if id_tab[exp.dest.name].port_type != id_tab[exp.source.name].port_type
-                        # AST decoration
-                        exp.dest = id_tab[exp.dest.name] 
-                        exp.source = id_tab[exp.source.name]
-                        return true
-                    else 
-                        raise "Error : ports #{exp.dest.name} and #{exp.source.name} are from same port type and can't be wired together."
+                # TODO : Voir pour bouger le contenu de ce branchement en l'état dans une fonction visitUnaryExp
+                if exp.source.class == VHDL::AST::BinaryExp
+                    testTypeValidity exp.source
+                elsif @id_tab[exp.dest.name].data_type == @id_tab[exp.source.name].data_type
+                    if (@id_tab[exp.dest.name].class == VHDL::AST::Port) and (@id_tab[exp.dest.name].port_type != "out")
+                            raise "Error : ports #{exp.dest.name} and #{exp.source.name} are from same port type and can't be wired together.\n -> #{exp.dest.token.line}"
                     end
+
                 else
-                    raise "Error : ports #{exp.dest.name} and #{exp.source.name} don't ave the same data_type and can't be wired together."
+                    raise "Error : #{exp.dest.name} and #{exp.source.name} don't have the same data_type and can't be wired together.\n -> #{exp.dest.token.line}"
+                end
+            when VHDL::AST::BinaryExp
+                op_type = [@id_tab[exp.operand1.name].data_type.type_name,@id_tab[exp.operand2.name].data_type.type_name]
+                if $DEF_OP_TYPES[exp.operator.op].include?(op_type)
+                    return $DEF_OP_RET_TYPES[exp.operator.op][op_type]
+                else
+                    raise "Error : #{exp.operand1} and #{exp.operand2} don't match types expected with operator #{exp.operator} and can't be wired together (got #{@id_tab[exp.operand1.name].data_type} #{exp.operator} #{@id_tab[exp.operand2.name].data_type}).\n -> #{exp.operand1.token.line}"
                 end
             end
         end

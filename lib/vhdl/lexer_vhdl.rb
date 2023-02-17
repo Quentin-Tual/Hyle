@@ -49,10 +49,24 @@ module VHDL
                         @tokens << VHDL::AST::Token.new(:in, $&, num_line)
                     when /\Aout/
                         @tokens << VHDL::AST::Token.new(:out, $&, num_line)
+                    when /\Abit_vector\(\d+ downto \d+\)/
+                        @tokens << VHDL::AST::Token.new(:type, $&, num_line)
                     when /\Abit/ 
                         @tokens << VHDL::AST::Token.new(:type, $&, num_line)
                     when /\A<=/
                         @tokens << VHDL::AST::Token.new(:assign_sig, $&, num_line)
+                    when /\Aand/
+                        @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
+                    when /\Aor/
+                        @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
+                    when /\Axor/
+                        @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
+                    when /\Anand/
+                        @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
+                    when /\Anor/
+                        @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
+                    when /\Anot/
+                        @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
                     when /\A\:/
                         @tokens << VHDL::AST::Token.new(:colon, $&, num_line)
                     when /\A\./

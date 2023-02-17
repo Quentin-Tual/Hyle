@@ -57,7 +57,7 @@ module VHDL
             archs = []
             while show_next != nil
                 if show_next.kind == :architecture
-                    archs << parse_arch_body 
+                    archs << parse_arch 
                 else 
                     break
                 end
@@ -65,41 +65,40 @@ module VHDL
             return archs
         end
 
-        def parse_arch_body
+        def parse_arch
             expect :architecture
             name = AST::Ident.new(expect(:ident))
             expect :of
             ent = AST::Ident.new(expect(:ident))
             expect :is
             arch_decl = []
-            del_next_new_line
             until show_next.kind == :begin
-                parse_arch_declarations
+                arch_decl << parse_arch_declarations
+                del_next_new_line
             end
             expect :begin
-            del_next_new_line
             statements = []
             while show_next.kind != :end
-                statements << parse_arch_statements
+                statements << parse_arch_body
             end 
             expect :end
             expect :architecture
             expect :semicol
-            del_next_new_line
-            return AST::Architecture.new(name, ent, statements)
+            return AST::Architecture.new(name, ent, arch_decl, statements)
         end
 
-        def parse_arch_declarations tmp# Still WIP
-                @tokens = tmp ### TEST
+        def parse_arch_declarations
                 next_line = show_next_line
                 next_line_kinds = next_line.collect {|x| x.kind}
                 case next_line_kinds
                     in [:signal, :ident, :colon, :type, :semicol] # Comment faire si le type est un vecteur ? Faire contenir la taille dans la chaine de caractère associée au token semble une bonne solution, reste à voir comment extraire ça avec des regex
                         return VHDL::AST::SignalDeclaration.new(VHDL::AST::Ident.new(next_line[1]), VHDL::AST::Type.new(next_line[3].val))    
+                    else
+                        raise "Error : Not recognized declaration sequence -> #{next_line_kinds}"
                 end
         end
 
-        def parse_arch_statements
+        def parse_arch_body
             next_line = show_next_line
             next_line_kinds = next_line.collect {|x| x.kind}
             case next_line_kinds
@@ -130,17 +129,28 @@ module VHDL
                 # Signal/Port assignement 
                 in [:ident, :assign_sig, :ident, :semicol]
                     # Only create an object, visitor object in charge of contextual analysis will then replace the names by actual instantiated Port objects.
+                    # TODO : Voir si on ne met pas toujours une unary exp à la place de la source ici (un seul opérande et pas d'opération)
                     ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), AST::Ident.new(next_line[2]))
+                in [:ident, :assign_sig, :ident, :operator, :ident, :semicol]
+                    ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), parse_BinaryExp(next_line))
             else
-                raise "ERROR : Expecting architecture body expression. Received unknown expression."
+                raise "Error : Expecting architecture body expression. Received unknown expression.\n -> #{next_line[0].line} : #{next_line_kinds}"
             end 
             del_next_new_line
             return ret
         end
 
+        def parse_BinaryExp exp
+            if $DEF_OP.include?(exp[3].val)
+                ret = VHDL::AST::BinaryExp.new(AST::Ident.new(exp[2]), VHDL::AST::Operator.new(exp[3].val), AST::Ident.new(exp[4]))
+            else
+                raise "Error : Unknown operator encountered #{exp[3].val}.\n -> #{exp[3].line}."
+            end
+        end
+
         def show_next_line
 
-            del_next_new_line
+            # del_next_new_line
 
             ret = []
             until show_next.kind == :new_line
@@ -180,7 +190,16 @@ module VHDL
                 raise "ERROR : expecting token #{expected_tok_kind}. Received #{actual_kind}."
             end
 
+            del_next_new_line
             return ret
         end
+
+        # TESTS Methods 
+        def test_parse_arch_declarations tmp
+            @tokens = tmp # Uncomment for the TEST
+            parse_arch_declarations
+        end
+
     end
+
 end

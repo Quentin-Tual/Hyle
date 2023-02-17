@@ -2,6 +2,8 @@
 
 module VHDL 
 
+    # ? : Surement possible de faire quelque chose de plus propre avec un hash ayant comme clé le type et comme valeur le keyword langage à insérer dans le code générer. Avantage : Avoir tous les keywords langages au même endroit -> plus ranger et clean mais à voir si vraiment utile.
+
     class DeParser
         attr_reader :dec_ast, :str
         
@@ -36,9 +38,40 @@ module VHDL
         def deparse_arch sub_ast
             tmp = "architecture #{sub_ast.name.name} of #{sub_ast.entity.name.name} is\n\n"
             # in theory, call here "deparse_arch_decl"
+            tmp << deparse_arch_decl(sub_ast.decl)
             tmp << "begin\n\n"
             tmp << deparse_arch_body(sub_ast.body)  
             tmp << "end architecture;\n\n"
+        end
+
+        def deparse_arch_decl sub_ast
+            tmp = ""
+            if sub_ast != []
+                sub_ast.each{ |d|
+                    case d
+                    when VHDL::AST::SignalDeclaration
+                        tmp << "#{deparse_SignalDeclaration(d)}\n"
+                    else
+                        raise "Internal error : Unknwon statement type, corrupted AST"
+                    end
+                }
+                tmp << "\n"
+            end
+            return tmp
+        end
+
+        def deparse_SignalDeclaration declaration
+            tmp = "\tsignal #{declaration.name.name} : #{deparse_Type declaration.data_type};"
+        end
+
+        def deparse_Type type
+            tmp = "#{type.type_name}"
+            case tmp
+            when "bit"
+                return tmp # * : Nothing more to add then for signal declaration
+            when "bit_vector" 
+                tmp << "(#{type.size - 1} downto 0)"
+            end
         end
 
         def deparse_arch_body sub_ast
@@ -51,13 +84,12 @@ module VHDL
                     when VHDL::AST::AssignStatement
                         tmp << deparse_AssignStatement(s)
                     else
-                        raise "Error : Unknown statement type. Corrupted Netlist."
+                        raise "Internal error : Unknown statement type, corrupted AST."
                     end
                 }
                 tmp << "\n"
-            else 
-                return ""
-            end            
+            end    
+            return tmp        
         end
 
         def deparse_instantiateStatement statement
@@ -81,8 +113,18 @@ module VHDL
         end
 
         def deparse_AssignStatement statement
-            tmp = "\t#{statement.dest.name.name} <= #{statement.source.name.name};\n"
+            # TODO : Ajouter un branchement pour les binaryExp (1 opérateur, 2 opérandes)
+            case statement.source
+            when VHDL::AST::BinaryExp
+                tmp = "\t#{statement.dest.name.name} <= #{deparse_BinaryExp statement.source};\n"
+            else
+                tmp = "\t#{statement.dest.name.name} <= #{statement.source.name.name};\n"
+            end
         end
+
+        def deparse_BinaryExp exp
+            tmp = "#{exp.operand1.name.name} #{exp.operator.op} #{exp.operand2.name.name}"
+        end 
 
         def save
             f = File.new("rev_#{dec_ast.entity.name.name}.vhd", "w")
