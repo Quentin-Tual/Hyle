@@ -46,10 +46,13 @@ RSpec.describe VHDL::Parser do
                 a.body.each{ |b| 
                     expect(b).to be_kind_of VHDL::AST::AssignStatement 
                     expect(b.dest).to be_kind_of(VHDL::AST::Ident)
-                    expect(b.source).to be_kind_of(VHDL::AST::Ident).or be_kind_of(VHDL::AST::BinaryExp)
+                    expect(b.source).to be_kind_of(VHDL::AST::Ident).or be_kind_of(VHDL::AST::UnaryExp).or be_kind_of(VHDL::AST::BinaryExp)
                     if b.source.class == VHDL::AST::BinaryExp
                         expect(b.source.operand1).to be_kind_of(VHDL::AST::Ident)
                         expect(b.source.operand2).to be_kind_of(VHDL::AST::Ident)
+                        expect(b.source.operator).to be_kind_of(VHDL::AST::Operator)
+                    elsif b.source.class == VHDL::AST::UnaryExp
+                        expect(b.source.operand).to be_kind_of(VHDL::AST::Ident)
                         expect(b.source.operator).to be_kind_of(VHDL::AST::Operator)
                     end
                 }

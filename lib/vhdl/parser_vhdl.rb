@@ -43,7 +43,6 @@ module VHDL
                 while show_next.kind != :semicol # Boucle jusqu'à la fin de la déclaration des ports
                     name = VHDL::AST::Ident.new(expect(:ident))
                     expect :colon
-                    # TODO : On pourrait ici aussi créer une classe de plus en terme de couche (comme Ident). Un type nommé "type" sous la forme d'une énumération pouvant prendre un nombre prédéterminé de valeurs différentes.
                     port_type = expect(:in, :out).val 
                     data_type = VHDL::AST::Type.new(expect(:type).val)
                     expect :semicol, :c_parent # 2 possibilités au même instant, ne créant pas de nouvelle branche dans l'arbre de décision (fin de branchement/chemin parallèle)
@@ -131,6 +130,8 @@ module VHDL
                     # Only create an object, visitor object in charge of contextual analysis will then replace the names by actual instantiated Port objects.
                     # TODO : Voir si on ne met pas toujours une unary exp à la place de la source ici (un seul opérande et pas d'opération)
                     ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), AST::Ident.new(next_line[2]))
+                in [:ident, :assign_sig, :operator, :ident, :semicol]
+                    ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), parse_UnaryExp(next_line))
                 in [:ident, :assign_sig, :ident, :operator, :ident, :semicol]
                     ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), parse_BinaryExp(next_line))
             else
@@ -138,6 +139,14 @@ module VHDL
             end 
             del_next_new_line
             return ret
+        end
+
+        def parse_UnaryExp exp
+            if $DEF_OP.include?(exp[2].val)
+                ret = VHDL::AST::UnaryExp.new(AST::Operator.new(exp[2].val), AST::Ident.new(exp[3]))
+            else
+                raise "Error : Unknown operator encountered #{exp[2].val}.\n -> #{exp[2].line}."
+            end
         end
 
         def parse_BinaryExp exp
@@ -149,9 +158,7 @@ module VHDL
         end
 
         def show_next_line
-
-            # del_next_new_line
-
+            
             ret = []
             until show_next.kind == :new_line
                 ret << show_next 

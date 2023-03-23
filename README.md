@@ -15,6 +15,9 @@ For the moment, the VHDL subset "parsable" with this tool includes :
 
 ## ToDo 
 
+- [ ] Voir pour la lib IEEE (std_logic_1164)
+- [ ] Ajouter un gemfile et ce qu'il faut pour partager le soft
+
 - [x] Checker si un doublon en nommage est détecté (port, signal confondu)
 - [x] Faire la visite des déclarations dans l'architecture
 - [x] Faire le deparsing pour le mot signal si pas encore fait
@@ -35,4 +38,3 @@ For the moment, the VHDL subset "parsable" with this tool includes :
   - [x] nand
   - [x] nor
   - [x] bit_vector
-- [ ] Voir pour la lib IEEE (std_logic_1164)

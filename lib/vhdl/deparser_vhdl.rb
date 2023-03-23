@@ -106,7 +106,7 @@ module VHDL
         def deparse_associationStatement association_statements
             tmp = ""
             association_statements.each{ |asso_state|
-                tmp << "\t\t#{asso_state.dest.name.name} => #{asso_state.source.name.name},\n"
+                tmp << "\t\t#{asso_state.dest.decl.name.name} => #{asso_state.source.decl.name.name},\n"
             }
             tmp.chop!.chop!
             tmp << "\n"
@@ -115,15 +115,21 @@ module VHDL
         def deparse_AssignStatement statement
             # TODO : Ajouter un branchement pour les binaryExp (1 opérateur, 2 opérandes)
             case statement.source
+            when VHDL::AST::UnaryExp
+                tmp = "\t#{statement.dest.decl.name.name} <= #{deparse_UnaryExp statement.source};\n"
             when VHDL::AST::BinaryExp
-                tmp = "\t#{statement.dest.name.name} <= #{deparse_BinaryExp statement.source};\n"
+                tmp = "\t#{statement.dest.decl.name.name} <= #{deparse_BinaryExp statement.source};\n"
             else
-                tmp = "\t#{statement.dest.name.name} <= #{statement.source.name.name};\n"
+                tmp = "\t#{statement.dest.decl.name.name} <= #{statement.source.decl.name.name};\n"
             end
         end
 
+        def deparse_UnaryExp exp
+            tmp = "#{exp.operator.op} #{exp.operand.decl.name.name}"
+        end
+
         def deparse_BinaryExp exp
-            tmp = "#{exp.operand1.name.name} #{exp.operator.op} #{exp.operand2.name.name}"
+            tmp = "#{exp.operand1.decl.name.name} #{exp.operator.op} #{exp.operand2.decl.name.name}"
         end 
 
         def save

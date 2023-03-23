@@ -19,7 +19,7 @@ begin
 	s <= clk;
 	o <= s;
 	s0 <= clk and en;
-	s2 <= s;
+	s2 <= not s;
 
 end architecture;
 

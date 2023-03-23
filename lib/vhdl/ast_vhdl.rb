@@ -33,11 +33,11 @@ module VHDL
 
         Root                    =   Struct.new(*:entity, *:architectures)
         Entity                  =   Struct.new(:name, *:ports, *:architectures)
-        Port                    =   Struct.new(:name, :port_type, :data_type, :value)
+        Port                    =   Struct.new(:name, :port_type, :data_type)
         Architecture            =   Struct.new(:name, :entity, :decl, :body)
         PortMap                 =   Struct.new(*:association_statements)
         
-        Ident                   =   Struct.new(:token) do 
+        Ident                   =   Struct.new(:token, :decl) do 
             def name 
                 self.token.val
             end
@@ -74,6 +74,7 @@ module VHDL
         AssignStatement         =   Struct.new(:dest, :source)
         InstantiateStatement    =   Struct.new(:name, :entity, :arch, :lib, :port_map)
 
+        UnaryExp                =   Struct.new(:operator, :operand, :ret_type)
         BinaryExp               =   Struct.new(:operand1, :operator, :operand2, :ret_type) 
 
         # Add behavioral expressions classes necessary to parse the architecture body

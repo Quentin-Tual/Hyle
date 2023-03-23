@@ -27,7 +27,7 @@ RSpec.describe VHDL::DeParser do
         it 'return an architecture section in VHDL description' do
             tmp = @deparser.deparse_arch @deparser.dec_ast.architectures[0]
             expect(tmp).to be_kind_of String
-            expect(tmp).to eq("architecture rtl of test is\n\n\tsignal s0 : bit;\n\tsignal s1 : bit_vector(15 downto 0);\n\tsignal s2 : bit;\n\nbegin\n\n\ts <= clk;\n\to <= s;\n\ts0 <= clk and en;\n\ts2 <= s;\n\nend architecture;\n\n")
+            expect(tmp).to eq("architecture rtl of test is\n\n\tsignal s0 : bit;\n\tsignal s1 : bit_vector(15 downto 0);\n\tsignal s2 : bit;\n\nbegin\n\n\ts <= clk;\n\to <= s;\n\ts0 <= clk and en;\n\ts2 <= not s;\n\nend architecture;\n\n")
         end
 
         it 'return an architecture section in VHDL description with an empty body' do
