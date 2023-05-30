@@ -78,7 +78,73 @@ module VHDL
         BinaryExp               =   Struct.new(:operand1, :operator, :operand2, :ret_type) 
 
         # Add behavioral expressions classes necessary to parse the architecture body
-
+        $DEF_STD_TIMED_OPS = {
+            "and2_d" => AST::Entity.new(
+                AST::Ident.new(AST::Token.new(:ident, "and2_d")), # Entity name
+                [
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
+                ],
+                [AST::Architecture.new(
+                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
+                )] # Arch name
+            ),
+            "or2_d" => AST::Entity.new(
+                AST::Ident.new(AST::Token.new(:ident, "or2_d")), # Entity name
+                [
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
+                ],
+                [AST::Architecture.new(
+                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
+                )] # Arch name
+            ),
+            "xor2_d" => AST::Entity.new(
+                AST::Ident.new(AST::Token.new(:ident, "xor2_d")), # Entity name
+                [
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
+                ],
+                [AST::Architecture.new(
+                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
+                )] # Arch name
+            ),
+            "nand2_d" => AST::Entity.new(
+                AST::Ident.new(AST::Token.new(:ident, "nand2_d")), # Entity name
+                [
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
+                ],
+                [AST::Architecture.new(
+                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
+                )] # Arch name
+            ),
+            "nor2_d" => AST::Entity.new(
+                AST::Ident.new(AST::Token.new(:ident, "nor2_d")), # Entity name
+                [
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
+                ],
+                [AST::Architecture.new(
+                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
+                )] # Arch name
+            ),
+            "not_d" => AST::Entity.new(
+                AST::Ident.new(AST::Token.new(:ident, "not_d")), # Entity name
+                [
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
+                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
+                ],
+                [AST::Architecture.new(
+                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
+                )] # Arch name
+            ) 
+        }
 
         class Work 
             # Current library, known entities are stored in it in the form of decorated ASTs.
@@ -90,6 +156,9 @@ module VHDL
                 if ent != []
                     ent.each{|e| @entities[e.name.name] = e}
                 end
+                $DEF_STD_TIMED_OPS.values.each{ |ent|
+                    self.add ent
+                }
             end
         
             def export
