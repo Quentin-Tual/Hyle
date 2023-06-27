@@ -105,7 +105,7 @@ module VHDL
                 exp.entity = @actual_lib.entities[exp.entity.name]
                 @id_tab[exp.name.name] = exp.entity
                 @id_tab[exp.entity.name.name] = exp.entity
-                exp.entity.ports.each{|p| @id_tab["#{exp.name.name}:#{p.name.name}"] = p}
+                exp.entity.ports.each{|p| @id_tab["#{exp.name.name}_#{p.name.name}"] = p}
                 exp.arch = exp.entity.architectures.select{ |arch|
                     arch.name.name == exp.arch.name
                 } 
@@ -184,9 +184,10 @@ module VHDL
         def testTypeValidity exp, ent = nil
             case exp # Different conditions for a valid expression, also different form to test (match it up in the future)
             when VHDL::AST::AssociationStatement  
-                if @id_tab["#{ent}:#{exp.dest.name}"].data_type == @id_tab[exp.source.name].data_type
-                    if (@id_tab["#{ent}:#{exp.dest.name}"].class == VHDL::AST::Port and @id_tab[exp.source.name].class == VHDL::AST::Port) 
-                        if (@id_tab["#{ent}:#{exp.dest.name}"].port_type != @id_tab[exp.source.name].port_type)
+                # ! : Order of entity declaration causes issues here. Solution at first sight -> Schedule entity treatment by any means to make it appears from front-end (inputs close comp) to back-end (outputs close comp)
+                if @id_tab["#{ent}_#{exp.dest.name}"].data_type == @id_tab[exp.source.name].data_type
+                    if (@id_tab["#{ent}_#{exp.dest.name}"].class == VHDL::AST::Port and @id_tab[exp.source.name].class == VHDL::AST::Port) 
+                        if (@id_tab["#{ent}_#{exp.dest.name}"].port_type != @id_tab[exp.source.name].port_type)
                             raise "Error : ports #{exp.dest.name} and #{exp.source.name} are from same port type and can't be wired together.\n -> #{exp.dest.token.line}"
                         end
                     end

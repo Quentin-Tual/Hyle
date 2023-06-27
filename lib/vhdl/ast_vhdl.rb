@@ -46,13 +46,13 @@ module VHDL
         Type                    = Struct.new(:type_name,:size) do
             attr_reader :type_name, :size
             def initialize type_name
-                if $DEF_TYPES.map{|ref| type_name.match?(ref)}.include?(true)
-                    @type_name = type_name.split("(")[0]
+                if $DEF_TYPES.collect{|ref| type_name.match?(ref)}.include?(true)
+                    self.type_name = type_name.split("(")[0]
                     if $DEF_TYPES_SIZES[type_name].nil? # If the size is not dermined by the type 
                         # * : \/ Parsing from vector size to bit size below \/
-                        @size = type_name[/\d+/].to_i + 1 
+                        self.size = type_name[/\d+/].to_i + 1 
                     else # Else, size for this type is known 
-                        @size = $DEF_TYPES_SIZES[type_name]
+                        self.size = $DEF_TYPES_SIZES[type_name]
                     end
                 else
                     raise "Error : Unknown type #{type_name} encountered."
@@ -78,73 +78,73 @@ module VHDL
         BinaryExp               =   Struct.new(:operand1, :operator, :operand2, :ret_type) 
 
         # Add behavioral expressions classes necessary to parse the architecture body
-        $DEF_STD_TIMED_OPS = {
-            "and2_d" => AST::Entity.new(
-                AST::Ident.new(AST::Token.new(:ident, "and2_d")), # Entity name
-                [
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
-                ],
-                [AST::Architecture.new(
-                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
-                )] # Arch name
-            ),
-            "or2_d" => AST::Entity.new(
-                AST::Ident.new(AST::Token.new(:ident, "or2_d")), # Entity name
-                [
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
-                ],
-                [AST::Architecture.new(
-                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
-                )] # Arch name
-            ),
-            "xor2_d" => AST::Entity.new(
-                AST::Ident.new(AST::Token.new(:ident, "xor2_d")), # Entity name
-                [
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
-                ],
-                [AST::Architecture.new(
-                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
-                )] # Arch name
-            ),
-            "nand2_d" => AST::Entity.new(
-                AST::Ident.new(AST::Token.new(:ident, "nand2_d")), # Entity name
-                [
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
-                ],
-                [AST::Architecture.new(
-                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
-                )] # Arch name
-            ),
-            "nor2_d" => AST::Entity.new(
-                AST::Ident.new(AST::Token.new(:ident, "nor2_d")), # Entity name
-                [
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
-                ],
-                [AST::Architecture.new(
-                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
-                )] # Arch name
-            ),
-            "not_d" => AST::Entity.new(
-                AST::Ident.new(AST::Token.new(:ident, "not_d")), # Entity name
-                [
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", Type.new("bit")),
-                    AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", Type.new("bit")),
-                ],
-                [AST::Architecture.new(
-                    AST::Ident.new(AST::Token.new(:ident, "rtl"))
-                )] # Arch name
-            ) 
-        }
+        # $GTECH = {
+        #     "and2_d" => AST::Entity.new(
+        #         AST::Ident.new(AST::Token.new(:ident, "and2_d")), # Entity name
+        #         [
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", AST::Type.new("bit")),
+        #         ],
+        #         [AST::Architecture.new(
+        #             AST::Ident.new(AST::Token.new(:ident, "netenos"))
+        #         )] # Arch name
+        #     ),
+        #     "or2_d" => AST::Entity.new(
+        #         AST::Ident.new(AST::Token.new(:ident, "or2_d")), # Entity name
+        #         [
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", AST::Type.new("bit")),
+        #         ],
+        #         [AST::Architecture.new(
+        #             AST::Ident.new(AST::Token.new(:ident, "netenos"))
+        #         )] # Arch name
+        #     ),
+        #     "xor2_d" => AST::Entity.new(
+        #         AST::Ident.new(AST::Token.new(:ident, "xor2_d")), # Entity name
+        #         [
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", AST::Type.new("bit")),
+        #         ],
+        #         [AST::Architecture.new(
+        #             AST::Ident.new(AST::Token.new(:ident, "netenos"))
+        #         )] # Arch name
+        #     ),
+        #     "nand2_d" => AST::Entity.new(
+        #         AST::Ident.new(AST::Token.new(:ident, "nand2_d")), # Entity name
+        #         [
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", AST::Type.new("bit")),
+        #         ],
+        #         [AST::Architecture.new(
+        #             AST::Ident.new(AST::Token.new(:ident, "netenos"))
+        #         )] # Arch name
+        #     ),
+        #     "nor2_d" => AST::Entity.new(
+        #         AST::Ident.new(AST::Token.new(:ident, "nor2_d")), # Entity name
+        #         [
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "b")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", AST::Type.new("bit")),
+        #         ],
+        #         [AST::Architecture.new(
+        #             AST::Ident.new(AST::Token.new(:ident, "netenos"))
+        #         )] # Arch name
+        #     ),
+        #     "not_d" => AST::Entity.new(
+        #         AST::Ident.new(AST::Token.new(:ident, "not_d")), # Entity name
+        #         [
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "a")), "in", AST::Type.new("bit")),
+        #             AST::Port.new(AST::Ident.new(AST::Token.new(:ident, "o")), "out", AST::Type.new("bit")),
+        #         ],
+        #         [AST::Architecture.new(
+        #             AST::Ident.new(AST::Token.new(:ident, "netenos"))
+        #         )] # Arch name
+        #     ) 
+        # }
 
         class Work 
             # Current library, known entities are stored in it in the form of decorated ASTs.
@@ -156,7 +156,7 @@ module VHDL
                 if ent != []
                     ent.each{|e| @entities[e.name.name] = e}
                 end
-                $DEF_STD_TIMED_OPS.values.each{ |ent|
+                $GTECH.values.each{ |ent|
                     self.add ent
                 }
             end
