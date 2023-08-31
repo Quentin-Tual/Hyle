@@ -20,6 +20,12 @@ module VHDL
                         num_line += 1
                     when /\A\s/
                         # Do nothing, just encountered space(s) or tabulation(s)
+                    when /\Alibrary \w+;/
+                        # Do nothing
+                    when /\Ause ieee.std_logic_1164.all;/
+
+                    when /\Ause ieee.numeric_std.all;/
+
                     when /\Aentity/
                         @tokens << VHDL::AST::Token.new(:entity, $&, num_line)
                     when /\Ais/
@@ -54,8 +60,14 @@ module VHDL
                         @tokens << VHDL::AST::Token.new(:type, $&, num_line)
                     when /\Abit/ 
                         @tokens << VHDL::AST::Token.new(:type, $&, num_line)
+                    when /\Astd_logic/
+                        @tokens << VHDL::AST::Token.new(:type, "bit", num_line)
                     when /\A<=/
                         @tokens << VHDL::AST::Token.new(:assign_sig, $&, num_line)
+                    when /\A\.\w+/
+                        # entity name in an instantiation
+                        @tokens << VHDL::AST::Token.new(:namespace_sep, ".", num_line)
+                        @tokens << VHDL::AST::Token.new(:entity, $&.split(".")[1], num_line)
                     when /\Aand/
                         @tokens << VHDL::AST::Token.new(:operator, $&, num_line)
                     when /\Aor/

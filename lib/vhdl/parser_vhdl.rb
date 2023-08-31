@@ -81,7 +81,7 @@ module VHDL
                 statements << parse_arch_body
             end 
             expect :end
-            expect :architecture
+            expect :architecture, :ident
             expect :semicol
             return AST::Architecture.new(name, ent, arch_decl, statements)
         end
@@ -101,7 +101,7 @@ module VHDL
             next_line = show_next_line
             next_line_kinds = next_line.collect {|x| x.kind}
             case next_line_kinds
-                # Component instanciation
+                # * Component instanciation
                 in [:ident, :colon, :entity, *] 
                     name = AST::Ident.new(next_line[0])
                      # Gives the name of the Instantiated object
@@ -125,13 +125,15 @@ module VHDL
                     end
                     expect :semicol
                     ret = AST::InstantiateStatement.new(name, ent, arch, lib, port_map)
-                # Signal/Port assignement 
+                # * Signal/Port assignement 
                 in [:ident, :assign_sig, :ident, :semicol]
                     # Only create an object, visitor object in charge of contextual analysis will then replace the names by actual instantiated Port objects.
                     # TODO : Voir si on ne met pas toujours une unary exp à la place de la source ici (un seul opérande et pas d'opération)
                     ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), AST::Ident.new(next_line[2]))
+                # * Unary operation assign statement
                 in [:ident, :assign_sig, :operator, :ident, :semicol]
                     ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), parse_UnaryExp(next_line))
+                # * Binary operation assign statement
                 in [:ident, :assign_sig, :ident, :operator, :ident, :semicol]
                     ret = VHDL::AST::AssignStatement.new(AST::Ident.new(next_line[0]), parse_BinaryExp(next_line))
             else
@@ -194,7 +196,7 @@ module VHDL
             if expected_tok_kind.include? actual_kind
                 ret = accept_it
             else 
-                raise "ERROR : expecting token #{expected_tok_kind}. Received #{actual_kind}."
+                raise "ERROR : expecting token #{expected_tok_kind}. Received #{actual_kind}. Line : #{show_next.line}"
             end
 
             del_next_new_line

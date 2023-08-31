@@ -101,11 +101,14 @@ module VHDL
         end
 
         def visitInstantiateStatement exp
-            if exp.lib.name == "work"
+            if exp.lib.name == "work" or exp.lib.name == "gtech_lib"
                 exp.entity = @actual_lib.entities[exp.entity.name]
                 @id_tab[exp.name.name] = exp.entity
                 @id_tab[exp.entity.name.name] = exp.entity
                 exp.entity.ports.each{|p| @id_tab["#{exp.name.name}_#{p.name.name}"] = p}
+                if exp.arch.token.nil?
+                    exp.arch.token = VHDL::AST::Token.new(:ident, "netenos")
+                end
                 exp.arch = exp.entity.architectures.select{ |arch|
                     arch.name.name == exp.arch.name
                 } 
@@ -117,9 +120,31 @@ module VHDL
                 else 
                     exp.arch = exp.arch[0]
                 end
+            # elsif exp.lib.name == "gtech_lib" # Mimic the same sctructure but accept all new components (gtech already verified or will be during netlist constitution)
+            #     if @actual_lib.entities[exp.entity.name].nil? # First encounter
+            #         @actual_lib.entities[exp.entity.name] = exp.entity
+            #         # ! : Pas le choix d'instancier un objet Entity de l'AST pour la suite.
+            #         # exp.entity.name = VHDL::AST::Ident.new(VHDL::AST::Token.new(exp.entity.name)) 
+            #     else # Already encountered
+            #         exp.entity = @actual_lib[exp.entity.name]
+            #     end
+                
+            #     @id_tab[exp.name.name] = exp.entity # Instance name
+            #     @id_tab[exp.entity.name] = exp.entity # Entity name
 
+            #     exp.entity.ports.each{|p| @id_tab["#{exp.name.name}_#{p.name.name}"] = p}
+            #     exp.arch = exp.entity.architectures.select{ |arch|
+            #         arch.name.name == exp.arch.name
+            #     } 
+            #     if exp.arch == []
+            #         raise "Error : Architecture not found for instanciation of #{exp.name}."
+            #     elsif exp.arch.length > 1 
+            #         raise "Error : Multiple architectures found in entity #{exp.entity.name} for instanciation of #{exp.name}."
+            #     else 
+            #         exp.arch = exp.arch[0]
+            #     end
             else
-                raise "Error : Only \"work\" library allowed in the current version. See #{exp.name} instance declaration of entity #{exp.entity}."
+                raise "Error : Only \"work\" library allowed in the current version. See #{exp.name} instantiation of entity #{exp.entity}."
             end
             visitPortMap exp.port_map, exp.name.name
         end
@@ -175,7 +200,8 @@ module VHDL
 
         def visitAssociateStatement statement, ent
             
-            testTypeValidity statement, ent
+            # testTypeValidity statement, ent
+            # ! : Retrieved to make it easier, only one type treated anyway.
             statement.dest.decl     = @id_tab[ent].ports.select{|p| p.name.name == statement.dest.name}[0]
             statement.source.decl   = @id_tab[statement.source.name] 
 
@@ -209,9 +235,9 @@ module VHDL
                     raise "Error : #{exp.dest.name} and #{exp.source.name} don't have the same data_type and can't be wired together.\n -> #{exp.dest.token.line}"
                 end
             when VHDL::AST::UnaryExp
-                return @id_tab[exp.operand.name].data_type.type_name
+                return @id_tab[exp.operand.name].get_data_type_name
             when VHDL::AST::BinaryExp
-                op_type = [@id_tab[exp.operand1.name].data_type.type_name,@id_tab[exp.operand2.name].data_type.type_name]
+                op_type = [@id_tab[exp.operand1.name].get_data_type_name,@id_tab[exp.operand2.name].get_data_type_name]
                 if $DEF_OP_TYPES[exp.operator.op].include?(op_type)
                     return $DEF_OP_RET_TYPES[exp.operator.op][op_type]
                 else
